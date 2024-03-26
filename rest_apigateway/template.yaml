@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Amazon API Gateway REST API with HTTP integration to custom URL
+
+Parameters:
+  GetHttpUrl:
+    Type: String
+
+Resources:
+
+  AppApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: apigateway-backend-integration
+      Description: apigw created to manage all backend requests in our microservices
+
+  RootMethodGet:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref AppApi
+      ResourceId: !GetAtt AppApi.RootResourceId
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: GET
+        Uri: !Ref GetHttpUrl
+
+  Deployments:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+    - RootMethodGet
+    Properties:
+      RestApiId: !Ref AppApi
+  
+  Stage:  
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: prod
+      RestApiId: !Ref AppApi
+      DeploymentId: !Ref Deployments
+
+Outputs:
+  AppApiEndpoint:
+    Description: API Endpoint
+    Value: !Sub "https://${AppApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  
+  ApigatewayId:
+    Description: "Get the ARN of the apigateway"
+    Value: !Ref AppApi
