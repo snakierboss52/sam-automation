@@ -5,5 +5,5 @@ resolve_s3 = true
 s3_prefix = "apigateway-backend-integration"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "GetHttpUrl=\"https://backend-custom-url.com\""
+parameter_overrides = "HttpUrl=\"https://backend-custom-url.com\""
 image_repositories = []

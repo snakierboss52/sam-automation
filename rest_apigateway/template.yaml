@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: Amazon API Gateway REST API with HTTP integration to custom URL
 
 Parameters:
-  GetHttpUrl:
+  HttpUrl:
     Type: String
 
 Resources:
@@ -13,6 +13,12 @@ Resources:
     Properties:
       Name: apigateway-backend-integration
       Description: apigw created to manage all backend requests in our microservices
+      EndpointConfiguration: 
+        Types:
+          - EDGE
+      Tags:
+        - Key: environment
+          Value: production-apigw
 
   RootMethodGet:
     Type: AWS::ApiGateway::Method
@@ -24,12 +30,25 @@ Resources:
       Integration:
         Type: HTTP_PROXY
         IntegrationHttpMethod: GET
-        Uri: !Ref GetHttpUrl
+        Uri: !Ref HttpUrl
+
+  RootMethodPost:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref AppApi
+      ResourceId: !GetAtt AppApi.RootResourceId
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: HTTP_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Ref HttpUrl
 
   Deployments:
     Type: AWS::ApiGateway::Deployment
     DependsOn:
     - RootMethodGet
+    - RootMethodPost
     Properties:
       RestApiId: !Ref AppApi
   
