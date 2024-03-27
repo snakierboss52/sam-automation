@@ -5,6 +5,12 @@ Description: Amazon API Gateway REST API with HTTP integration to custom URL
 Parameters:
   HttpUrl:
     Type: String
+  ACMCertificateArn:
+    Type: String
+  CustomDomainName:
+    Type: String
+  CustomHostedZoneId:
+    Type: String
 
 Resources:
 
@@ -58,6 +64,35 @@ Resources:
       StageName: prod
       RestApiId: !Ref AppApi
       DeploymentId: !Ref Deployments
+    
+  CustomDomainApigw:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      CertificateArn: !Ref ACMCertificateArn
+      DomainName: !Ref CustomDomainName
+      EndpointConfiguration: 
+        Types: 
+          - EDGE
+      SecurityPolicy: TLS_1_2
+    
+  ApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    DependsOn:
+      - CustomDomainApigw
+    Properties:
+      DomainName: !Ref CustomDomainName
+      RestApiId: !Ref AppApi
+      Stage: !Ref Stage
+  
+  CustomDomainRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref CustomHostedZoneId
+      Name: !Ref CustomDomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CustomDomainApigw.DistributionDomainName
+        HostedZoneId: !GetAtt CustomDomainApigw.DistributionHostedZoneId
 
 Outputs:
   AppApiEndpoint:
