@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Template to deploy a simple lambda function and manage multiple versions
+
+Resources:
+
+  ApiDeployment:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+
+  MyLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      PackageType: Image
+      ImageUri: XXXXXX.dkr.ecr.us-east-1.amazonaws.com/sam-functions:v2     
+      AutoPublishAlias: live
+      FunctionName: sam-functions-hello-world
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /greeting
+            Method: GET
+            RestApiId: !Ref ApiDeployment
+      MemorySize: 128
+      EphemeralStorage:
+        Size: 512
+      DeploymentPreference:
+        Type: Linear10PercentEvery1Minute 
