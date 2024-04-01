@@ -6,7 +6,7 @@ In the world of serverless computing, managing Lambda functions efficiently is c
 
 ### Lambda Versioning & Alias
 
-**Function Versions and Aliases**: Lambda allows you to create versions of their functions. Each version represents a snapshot of the code and configuration settings. By using aliases, you can point to specific versions, allowing seamless transitions during deployments. For instance, a “ProdV1” alias might always point to the latest stable version, while a "ProdRelease1" alias could be used for testing new features.
+**Function Versions and Aliases**: Lambda allows you to create versions of their functions. Each version represents a snapshot of the code and configuration settings. By using aliases, you can point to specific versions, allowing seamless transitions during deployments. For instance, a “**ProdV1**” alias might always point to the latest stable version, while a "**ProdRelease1**" alias could be used for testing new features.
 
 ### Deployments
 
@@ -32,18 +32,62 @@ Thoughtful version management, canary deployments, and automation play key roles
 > [!NOTE]
 > You only need access to cloudformation if you want to deploy the functions using the template hosted on this repository
 
-### Deploy our fist function version
+### Types of Deployments in AWS Lambdas
+
+In AWS Lambdas you can choose the deployment preference type, you can select between Canary and Linear deployments, each one with different traffic shift measure
+
+* **Canary**: Traffic is shifted in two increments, this increments are represented in the percentage of traffic that will be shifted to the new version, and the interval in minutes before the remaining traffic is shifted in the second increment
+
+* **Linear**: Traffic is shifted in equal increments with an equal number of minutes between each increment
+
+| Deployment Preference Type   |
+|------------------------------|
+| Canary10Percent30Minutes     |
+| Canary10Percent5Minutes      |
+| Canary10Percent10Minutes     | 
+| Canary10Percent15Minutes     | 
+| Linear10PercentEvery10Minutes| 
+| Linear10PercentEvery1Minutes | 
+| Linear10PercentEvery2Minutes | 
+
+### Deploy our first function version
 
 For our functions we will use a docker image build based on the Dockerfile of this repository. v1 will be printing the message ```This is my version number 1``` and the other ```This is my version number 2```
 
+This test will be deployed with **Linear10PercentEvery1Minute** which reffers to shift traffic in equal increments every 1 Minute
 
+> [!NOTE]
+> If you want to deploy the function with the SAM Template hosted in this repository you will need to comment two lines in the deployment of the first function to see how works the deployment before using the Linear or canary preference and after. 
+![Screenshot](image-4.png)
+>* Remember use de command ```sam deploy --guided``` to execute the deployments using SAM
 
+In this stage you can test you Lambda Function with the Http Apigateway endpoint created
 
+### Deploy lambda with new version with Linear deployment
 
+To the second deployment, we need to discomment the two lines that reffer to the Deployment preference
 
-![alt text](image.png)
+> [!NOTE]
+> Also Remember to change the image version in the template.yaml
 
+After completing the second deployment you can go to the Lambda Dashboard in the tab that reffers to the Aliases and you will see how traffic is being shifted into the new version, and every minute will shift an equal part of traffic to this version if no errors occur
+
+![Screenshoot](image.png)
+
+### Test your application
+
+In this part you can test the Http endpoint and after multiple requests you may see the response of each version pointing to the same path and the same apigateway
+
+#### Test Version 1
 ![alt text](image-1.png)
 
-
+### Test Version 2
 ![alt text](image-2.png)
+
+### Next Steps
+
+* Implement CloudWatch alarms to exec rollback if the new version is givin errors on your custom or predefined metrics
+* Implement Hooks in Lambda that validate if the functions are run before and after traffic shifting
+
+> [!WARNING]
+> Remember to delete your cloud resources if you don't need it to avoid additional costs using **``` sam delete ```**
